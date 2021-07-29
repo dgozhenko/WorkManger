@@ -74,6 +74,9 @@ class HomeActivity : AppCompatActivity() {
       showLottieAnimation()
       activityHomeBinding.downloadLayout.visibility = View.GONE
       createDelayedWorkRequest()
+      activityHomeBinding.btnQueryWork.setOnClickListener {
+        queryWorkInfo()
+      }
     }
   }
 
@@ -118,6 +121,19 @@ class HomeActivity : AppCompatActivity() {
           showDownloadedImage(uriResult.toUri())
         }
       }
+    })
+  }
+
+  private fun queryWorkInfo() {
+    val workQuery = WorkQuery.Builder
+      .fromTags(listOf("imageWorker"))
+      .addStates(listOf(WorkInfo.State.SUCCEEDED))
+      .addUniqueWorkNames(listOf("oneTimeImageDownload", "periodicImageDownload", "delayedImageDownload"))
+      .build()
+
+    workManager.getWorkInfosLiveData(workQuery).observe(this, {
+      activityHomeBinding.tvWorkInfo.visibility = View.VISIBLE
+      activityHomeBinding.tvWorkInfo.text = resources.getQuantityString(R.plurals.text_work_desc, it.size, it.size)
     })
   }
 
