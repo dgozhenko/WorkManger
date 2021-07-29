@@ -73,8 +73,19 @@ class HomeActivity : AppCompatActivity() {
     activityHomeBinding.btnImageDownload.setOnClickListener {
       showLottieAnimation()
       activityHomeBinding.downloadLayout.visibility = View.GONE
-      createPeriodicWorkRequest()
+      createDelayedWorkRequest()
     }
+  }
+
+  private fun createDelayedWorkRequest() {
+    val imageWorker = OneTimeWorkRequestBuilder<ImageDownloadWorker>()
+      .setConstraints(constraints)
+      .setInitialDelay(30, TimeUnit.SECONDS)
+      .addTag("imageWork")
+      .build()
+
+    workManager.enqueueUniqueWork("delayedImageDownload", ExistingWorkPolicy.KEEP, imageWorker)
+    observeWork(imageWorker.id)
   }
 
   private fun createPeriodicWorkRequest() {
