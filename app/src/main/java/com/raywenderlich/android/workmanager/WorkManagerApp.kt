@@ -37,5 +37,21 @@
 package com.raywenderlich.android.workmanager
 
 import android.app.Application
+import androidx.work.Configuration
+import androidx.work.WorkManager
 
-class WorkManagerApp : Application()
+
+class WorkManagerApp : Application(), Configuration.Provider {
+
+    override fun getWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setMinimumLoggingLevel(android.util.Log.DEBUG)
+            .build()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        WorkManager.initialize(this, workManagerConfiguration)
+    }
+
+}
