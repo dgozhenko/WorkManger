@@ -40,11 +40,25 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
+import androidx.work.*
 import com.raywenderlich.android.workmanager.R
 import com.raywenderlich.android.workmanager.databinding.ActivityHomeBinding
+import com.raywenderlich.android.workmanager.workers.ImageDownloadWorker
+import java.util.*
 
 class HomeActivity : AppCompatActivity() {
   private lateinit var activityHomeBinding: ActivityHomeBinding
+
+  private val workManager by lazy {
+    WorkManager.getInstance(applicationContext)
+  }
+
+  private val constraints = Constraints.Builder()
+    .setRequiredNetworkType(NetworkType.CONNECTED)
+    .setRequiresStorageNotLow(true)
+    .setRequiresBatteryNotLow(true)
+    .build()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     setTheme(R.style.AppTheme)
@@ -54,6 +68,34 @@ class HomeActivity : AppCompatActivity() {
     activityHomeBinding.tvWorkInfo.visibility = View.GONE
 
     requestStoragePermissions()
+
+    activityHomeBinding.btnImageDownload.setOnClickListener {
+      showLottieAnimation()
+      activityHomeBinding.downloadLayout.visibility = View.GONE
+      createOneTimeWorkRequest()
+    }
+  }
+
+  private fun createOneTimeWorkRequest() {
+    val imageWorker = OneTimeWorkRequestBuilder<ImageDownloadWorker>().setConstraints(constraints)
+      .addTag("imageWorker").build()
+
+    workManager.enqueueUniqueWork("oneTimeImageDownload", ExistingWorkPolicy.KEEP, imageWorker)
+    observeWork(imageWorker.id)
+  }
+
+  private fun observeWork(id: UUID) {
+    workManager.getWorkInfoByIdLiveData(id).observe(this, {
+      if (it != null && it.state.isFinished) {
+        hideLottieAnimation()
+        activityHomeBinding.downloadLayout.visibility = View.VISIBLE
+
+        val uriResult = it.outputData.getString("IMAGE_URI")
+        if (uriResult != null) {
+          showDownloadedImage(uriResult.toUri())
+        }
+      }
+    })
   }
 
   private fun requestStoragePermissions() {
