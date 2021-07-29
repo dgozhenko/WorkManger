@@ -72,4 +72,15 @@ fun Bitmap.saveToInternalStorage(context: Context): Uri? {
   }
 }
 
-// TODO add getUriFromUrl extension method
+fun Context.getUriFromUrl(): Uri? {
+  val imageUrl = URL("https://images.pexels.com/photos/169573/pexels-photo-169573.jpeg" +
+          "?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940")
+
+  val bitmap = imageUrl.toBitmap()
+
+  var savedUri: Uri? = null
+  bitmap?.apply {
+    savedUri = saveToInternalStorage(this@getUriFromUrl)
+  }
+  return savedUri
+}
