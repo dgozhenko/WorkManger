@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.raywenderlich.android.workmanager">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.raywenderlich.android.workmanager">
 
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
   <uses-permission android:name="android.permission.INTERNET" />
@@ -27,7 +28,10 @@
 
     </activity>
 
-    <!-- TODO ADD PROVIDER -->
+    <provider
+        android:name="androidx.work.impl.WorkManagerInitializer"
+        android:authorities="${applicationId}.workmanager-init"
+        tools:node="remove" />
 
   </application>
 
