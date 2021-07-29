@@ -36,10 +36,15 @@
 
 package com.raywenderlich.android.workmanager.workers
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
-import androidx.work.CoroutineWorker
-import androidx.work.WorkerParameters
-import androidx.work.workDataOf
+import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import androidx.work.*
 import com.raywenderlich.android.workmanager.utils.getUriFromUrl
 import kotlinx.coroutines.delay
 
@@ -48,10 +53,34 @@ class ImageDownloadWorker(
   private val workerParameters: WorkerParameters
 ) : CoroutineWorker(context, workerParameters) {
   override suspend fun doWork(): Result {
+    setForeground(createForegroundInfo())
     delay(10000)
-
     val savedUri = context.getUriFromUrl()
-
     return Result.success(workDataOf("IMAGE_URI" to savedUri.toString()))
+  }
+
+  private fun createForegroundInfo(): ForegroundInfo {
+   val intent = WorkManager.getInstance(applicationContext).createCancelPendingIntent(id)
+
+   val notification = NotificationCompat.Builder(applicationContext, "workDownload")
+     .setContentTitle("Downloading Your Image")
+     .setTicker("Downloading Your Image")
+     .setSmallIcon(R.drawable.notification_action_background)
+     .setOngoing(true)
+     .addAction(android.R.drawable.ic_delete, "Cancel Download", intent)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      createChannel(notification, "workDownload")
+    }
+    return ForegroundInfo(1, notification.build())
+  }
+
+  @RequiresApi(Build.VERSION_CODES.O)
+  private fun createChannel(notificationBuilder: NotificationCompat.Builder, id: String) {
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    notificationBuilder.setDefaults(Notification.DEFAULT_VIBRATE)
+    val channel = NotificationChannel(id, "WorkManagerApp", NotificationManager.IMPORTANCE_HIGH)
+    channel.description = "WorkManagerApp Notifications"
+    notificationManager.createNotificationChannel(channel)
   }
 }
